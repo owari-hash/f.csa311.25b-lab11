@@ -14,6 +14,7 @@ enum Player {
 }
 
 public class Game {
+
     private final Board board;
     private final Player player;
     private final List<Game> history;
@@ -67,5 +68,27 @@ public class Game {
                 && board.getCell(1, 1) == board.getCell(2, 0))
             return board.getCell(1, 1);
         return null;
+    }
+
+    /**
+     * Undo the last move by returning the previous game state
+     * 
+     * @return the previous game state, or this game if no history exists
+     */
+    public Game undo() {
+        if (this.history.isEmpty()) {
+            return this;
+        }
+        // Get the last game state from history
+        return this.history.get(this.history.size() - 1);
+    }
+
+    /**
+     * Check if undo is possible
+     * 
+     * @return true if there are previous states to go back to
+     */
+    public boolean canUndo() {
+        return !this.history.isEmpty();
     }
 }

@@ -18,6 +18,7 @@ public class App extends NanoHTTPD {
 
     /**
      * Start the server at :8080 port.
+     * 
      * @throws IOException
      */
     public App() throws IOException {
@@ -29,19 +30,40 @@ public class App extends NanoHTTPD {
         System.out.println("\nRunning!\n");
     }
 
+    private Response handleNewGame(IHTTPSession session) {
+        this.game = new Game();
+        return newFixedLengthResponse(GameState.forGame(this.game).toString());
+    }
+
+    private Response handlePlay(IHTTPSession session) {
+        Map<String, String> params = session.getParms();
+        int x = Integer.parseInt(params.get("x"));
+        int y = Integer.parseInt(params.get("y"));
+        this.game = this.game.play(x, y);
+        return newFixedLengthResponse(GameState.forGame(this.game).toString());
+    }
+
+    // Fixed method to handle undo requests
+    private Response handleUndo(IHTTPSession session) {
+        if (this.game.canUndo()) {
+            this.game = this.game.undo();
+        }
+        return newFixedLengthResponse(GameState.forGame(this.game).toString());
+    }
+
     @Override
     public Response serve(IHTTPSession session) {
         String uri = session.getUri();
-        Map<String, String> params = session.getParms();
-        if (uri.equals("/newgame")) {
-            this.game = new Game();
-        } else if (uri.equals("/play")) {
-            // e.g., /play?x=1&y=1
-            this.game = this.game.play(Integer.parseInt(params.get("x")), Integer.parseInt(params.get("y")));
+        switch (uri) {
+            case "/newgame":
+                return handleNewGame(session);
+            case "/play":
+                return handlePlay(session);
+            case "/undo":
+                return handleUndo(session);
+            default:
+                return newFixedLengthResponse("Unknown request");
         }
-        // Extract the view-specific data from the game and apply it to the template.
-        GameState gameplay = GameState.forGame(this.game);
-        return newFixedLengthResponse(gameplay.toString());
     }
 
     public static class Test {
